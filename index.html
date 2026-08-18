@@ -1,0 +1,1009 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitPlan</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0}
+:root{
+ --bg:#0b0f19;--sidebar:#0e1320;--card:#131927;--card2:#1a2132;
+ --text:#f5f7fb;--muted:#98a2b3;--primary:#6c63ff;--primary-hover:#8179ff;
+ --green:#27d17f;--red:#ff5c70;--yellow:#f5c451;--border:rgba(255,255,255,.08)
+}
+body.light-mode{--bg:#f4f6fa;--sidebar:#fff;--card:#fff;--card2:#eef1f6;--text:#151923;--muted:#667085;--border:rgba(0,0,0,.1)}
+body{font-family:Arial,Helvetica,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;transition:.25s}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+#authScreen{position:fixed;inset:0;background:radial-gradient(circle at top,#25204e,var(--bg) 60%);display:flex;justify-content:center;align-items:center;padding:20px;z-index:9999}
+.auth-card{width:100%;max-width:440px;background:var(--card);border:1px solid var(--border);border-radius:20px;padding:35px;box-shadow:0 25px 70px rgba(0,0,0,.3)}
+.auth-logo{text-align:center;font-size:35px;font-weight:900;margin-bottom:10px}.auth-logo span{color:var(--primary-hover)}
+.auth-subtitle{text-align:center;color:var(--muted);margin-bottom:30px}
+.auth-tabs{display:grid;grid-template-columns:1fr 1fr;background:var(--card2);padding:5px;border-radius:10px;margin-bottom:25px}
+.auth-tabs button{border:0;background:transparent;color:var(--muted);padding:11px;border-radius:8px}.auth-tabs button.active{background:var(--primary);color:#fff}
+.auth-form{display:flex;flex-direction:column;gap:15px}.auth-field,.field{display:flex;flex-direction:column;gap:7px}
+label{font-weight:700;font-size:14px}.auth-field input,.field input,.field select,.field textarea{
+ width:100%;padding:12px 13px;border:1px solid var(--border);border-radius:10px;background:var(--card2);color:var(--text);outline:none
+}.field textarea{min-height:130px;resize:vertical}.auth-field input:focus,.field input:focus,.field select:focus,.field textarea:focus{border-color:var(--primary)}
+.auth-error{display:none;color:var(--red);font-size:14px}.auth-info{margin-top:20px;color:var(--muted);font-size:12px;line-height:1.5}
+.btn{border:0;border-radius:10px;padding:12px 16px;font-weight:700}.btn-primary{background:var(--primary);color:#fff}.btn-primary:hover{background:var(--primary-hover)}
+.btn-secondary{background:var(--card2);color:var(--text);border:1px solid var(--border)}
+.app{min-height:100vh}.sidebar{position:fixed;left:0;top:0;bottom:0;width:250px;background:var(--sidebar);border-right:1px solid var(--border);padding:25px 15px;z-index:50;transition:.25s}
+.logo{font-size:28px;font-weight:900;padding:0 12px 30px}.logo span{color:var(--primary-hover)}
+.nav{display:flex;flex-direction:column;gap:7px}.nav button{border:0;background:transparent;color:var(--muted);padding:12px;border-radius:10px;text-align:left}.nav button:hover,.nav button.active{background:var(--card2);color:var(--text)}.nav .logout-button{margin-top:20px;color:var(--red)}
+.main{margin-left:250px;padding:28px;max-width:1400px}.topbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:28px}.topbar h1{font-size:30px}.topbar p{color:var(--muted);margin-top:5px}.profile-chip{background:var(--card);border:1px solid var(--border);padding:10px 14px;border-radius:12px}.mobile-menu{display:none}
+.section{display:none}.section.active{display:block}.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}.card{background:var(--card);border:1px solid var(--border);border-radius:16px;padding:22px;margin-bottom:18px}.muted{color:var(--muted)}.stat{font-size:30px;font-weight:800;margin-top:8px}
+.progress-bar{height:12px;background:var(--card2);border-radius:20px;overflow:hidden;margin-top:12px}.progress-fill{height:100%;width:0;background:var(--primary);transition:.3s}
+.form-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:18px}.checkbox-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.check{display:flex;align-items:center;gap:8px;background:var(--card2);border:1px solid var(--border);padding:10px;border-radius:9px}.check input{accent-color:var(--primary)}
+.success-box{background:rgba(39,209,127,.08);border:1px solid rgba(39,209,127,.25);border-radius:12px;padding:15px;margin:15px 0}.warning-box{background:rgba(245,196,81,.08);border:1px solid rgba(245,196,81,.25);border-radius:12px;padding:15px;margin:15px 0}
+.ai-header{display:flex;align-items:center;gap:15px;margin-bottom:20px}.ai-icon{width:55px;height:55px;border-radius:15px;background:rgba(108,99,255,.15);display:flex;align-items:center;justify-content:center;font-size:27px}.ai-result{margin-top:20px}.ai-goal{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:15px;margin-bottom:12px}.ai-exercises{display:grid;grid-template-columns:repeat(2,1fr);gap:12px}.ai-exercise{background:var(--card2);border:1px solid var(--border);border-radius:12px;padding:15px}.ai-exercise strong{display:block;margin-bottom:5px}
+.workout-day{background:var(--card);border:1px solid var(--border);border-radius:16px;margin-bottom:18px;overflow:hidden}.workout-header{padding:18px 20px;background:var(--card2);display:flex;justify-content:space-between;align-items:center}.workout-title{font-size:18px;font-weight:700}.exercise{padding:17px 20px;border-top:1px solid var(--border);display:grid;grid-template-columns:1.6fr .6fr .8fr .9fr .7fr;gap:15px;align-items:center}.exercise strong{display:block}.exercise small{color:var(--muted)}.exercise.done{opacity:.5}.complete{background:var(--green);color:#06160f;border:0;border-radius:8px;padding:8px 10px;font-weight:700}.exercise.done .complete{background:#59636d;color:#fff}.tag{background:rgba(108,99,255,.15);color:#b9b4ff;padding:5px 9px;border-radius:7px;display:inline-block;font-size:12px}
+.table-container{overflow-x:auto}table{width:100%;border-collapse:collapse}th,td{padding:14px;text-align:left;border-bottom:1px solid var(--border)}th{color:var(--muted)}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+@media(max-width:1100px){.grid{grid-template-columns:1fr 1fr}.checkbox-grid{grid-template-columns:1fr 1fr}.exercise{grid-template-columns:1fr 1fr}}
+@media(max-width:900px){.sidebar{transform:translateX(-100%)}.sidebar.open{transform:translateX(0)}.main{margin-left:0;width:100%;padding:20px}.mobile-menu{display:inline-block;background:var(--card);color:var(--text);border:1px solid var(--border);padding:8px 12px;border-radius:8px;margin-bottom:10px}.form-grid,.grid{grid-template-columns:1fr}.ai-exercises{grid-template-columns:1fr}}
+@media(max-width:600px){.topbar{align-items:flex-start;flex-direction:column;gap:15px}.checkbox-grid{grid-template-columns:1fr}.exercise{grid-template-columns:1fr}}
+</style>
+<link rel="manifest" href="./manifest.json">
+<meta name="theme-color" content="#0b0f14">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-title" content="FitPlan">
+<link rel="apple-touch-icon" href="./icon-192.png">
+</head>
+<body>
+
+<div id="authScreen">
+<div class="auth-card">
+<div class="auth-logo">Fit<span>Plan</span></div>
+<div class="auth-subtitle">Dein persönlicher Trainingsplan</div>
+<div class="auth-tabs">
+<button id="loginTab" class="active" onclick="showAuthForm('login')">Anmelden</button>
+<button id="registerTab" onclick="showAuthForm('register')">Registrieren</button>
+</div>
+
+<form id="loginForm" class="auth-form" onsubmit="login(event)">
+<div class="auth-field"><label>E-Mail</label><input id="loginEmail" type="email" placeholder="deine@email.de" required></div>
+<div class="auth-field"><label>Passwort</label><input id="loginPassword" type="password" placeholder="Passwort" required></div>
+<div id="loginError" class="auth-error"></div>
+<button class="btn btn-primary" type="submit">🔐 Anmelden</button>
+</form>
+
+<form id="registerForm" class="auth-form" style="display:none" onsubmit="register(event)">
+<div class="auth-field"><label>Name</label><input id="registerName" type="text" placeholder="Dein Name" required></div>
+<div class="auth-field"><label>E-Mail</label><input id="registerEmail" type="email" placeholder="deine@email.de" required></div>
+<div class="auth-field"><label>Passwort</label><input id="registerPassword" type="password" placeholder="Mindestens 6 Zeichen" minlength="6" required></div>
+<div id="registerError" class="auth-error"></div>
+<button class="btn btn-primary" type="submit">✨ Konto erstellen</button>
+</form>
+
+<div style="display:flex;gap:8px;margin-top:18px;flex-wrap:wrap"><button type="button" class="btn btn-secondary" onclick="showStorageDiagnostic()">🔎 Speicher testen</button></div>
+<div class="auth-info">Gerätegetrennte Anmeldung: Dein Konto und deine Profildaten werden nur auf diesem Gerät und in diesem Browser gespeichert. Ein Konto vom Handy ist absichtlich nicht auf dem PC verfügbar – und umgekehrt.</div>
+</div>
+</div>
+
+<div id="app" style="display:none">
+<div class="app">
+
+<aside class="sidebar" id="sidebar">
+<div class="logo">Fit<span>Plan</span></div>
+<nav class="nav">
+<button class="active" onclick="showSection('dashboard',this)">🏠 Dashboard</button>
+<button onclick="showSection('profile',this)">👤 Mein Profil</button>
+<button onclick="showSection('ai',this)">🤖 KI-Zielanalyse</button>
+<button onclick="showSection('generator',this)">🏋️ Trainingsplan</button>
+<button onclick="showSection('progress',this)">📊 Fortschritt</button>
+<button onclick="showSection('goals',this)">🎯 Ziele</button>
+<button onclick="toggleTheme()" id="themeButton">☀️ Hellmodus</button>
+<button class="logout-button" onclick="logout()">🚪 Abmelden</button>
+</nav>
+</aside>
+
+<main class="main">
+<div class="topbar">
+<div>
+<button class="mobile-menu" onclick="toggleMenu()">☰</button>
+<h1 id="pageTitle">Dashboard</h1>
+<p id="pageSubtitle">Dein persönlicher Fitnessbereich</p>
+</div>
+<div class="profile-chip">👤 <span id="userName">Benutzer</span></div>
+</div>
+
+<section id="dashboard" class="section active">
+<div class="grid">
+<div class="card"><div class="muted">Trainings diese Woche</div><div class="stat" id="weekWorkouts">0</div></div>
+<div class="card"><div class="muted">Übungen erledigt</div><div class="stat" id="completedExercises">0</div></div>
+<div class="card"><div class="muted">Aktuelles Ziel</div><div class="stat" id="dashboardGoal" style="font-size:20px">Noch nicht festgelegt</div></div>
+</div>
+<div class="card">
+<h3>Wochenfortschritt</h3><p class="muted">Erledigte Übungen</p>
+<div class="progress-bar"><div class="progress-fill" id="weekProgress"></div></div>
+<p id="progressText" style="margin-top:10px">0%</p>
+</div>
+<div class="card" id="welcomeCard">
+<h2>Willkommen bei FitPlan 👋</h2>
+<p class="muted" style="margin-top:10px">Erstelle dein Profil und gib dein persönliches Trainingsziel an. Danach kann die Zielanalyse passende Übungen für dich in den Trainingsplan einbauen.</p>
+<button class="btn btn-primary" style="margin-top:18px" onclick="showSectionByName('profile')">Profil erstellen</button>
+</div>
+</section>
+
+<section id="profile" class="section">
+<div class="card">
+<h2>👤 Mein Profil</h2>
+<p class="muted" style="margin:8px 0 25px">Deine Daten werden in diesem Browser gespeichert.</p>
+<div id="profileSavedInfo" class="success-box" style="display:none">✓ Dein Profil wurde gespeichert.<br>Du kannst unten auf <b>„Bearbeiten“</b> klicken, um deine Angaben zu ändern.</div>
+
+<div class="form-grid">
+<div class="field"><label>Name</label><input id="name" placeholder="z. B. Max"></div>
+<div class="field"><label>Alter</label><input id="age" type="number" min="13" max="100"></div>
+<div class="field"><label>Geschlecht</label><select id="gender"><option value="">Bitte auswählen</option><option>Weiblich</option><option>Männlich</option><option>Divers</option><option>Keine Angabe</option></select></div>
+<div class="field"><label>Größe (cm)</label><input id="height" type="number"></div>
+<div class="field"><label>Gewicht (kg)</label><input id="weight" type="number" step="0.1"></div>
+<div class="field"><label>Trainingslevel</label><select id="level"><option>Anfänger</option><option>Fortgeschritten</option><option>Profi</option></select></div>
+<div class="field"><label>Hauptziel</label><select id="goal"><option>Muskelaufbau</option><option>Abnehmen</option><option>Kraft</option><option>Ausdauer</option><option>Allgemeine Fitness</option></select></div>
+<div class="field"><label>Trainings pro Woche</label><select id="days"><option value="2">2</option><option value="3" selected>3</option><option value="4">4</option><option value="5">5</option><option value="6">6</option></select></div>
+<div class="field"><label>Dauer pro Training</label><select id="duration"><option value="30">30 Minuten</option><option value="45">45 Minuten</option><option value="60" selected>60 Minuten</option><option value="90">90 Minuten</option></select></div>
+<div class="field"><label>Trainingsort</label><select id="location"><option>Zuhause</option><option>Fitnessstudio</option><option>Draußen</option></select></div>
+<div class="field"><label>Fitnessstand / Erfahrung</label><input id="fitness" placeholder="z. B. Ich trainiere seit 1 Jahr"></div>
+<div class="field"><label>Einschränkungen / Übungen vermeiden</label><textarea id="limitations" placeholder="z. B. keine Übungen über Kopf"></textarea></div>
+</div>
+
+<h3 style="margin-top:25px">🗓️ An welchen Wochentagen möchtest du trainieren?</h3>
+<p class="muted" style="margin:8px 0 12px">Wähle genau so viele Tage wie bei „Trainings pro Woche“ oder „Keine Angabe“.</p>
+<div class="checkbox-grid">
+<label class="check"><input class="training-day" type="checkbox" value="Montag"> Montag</label>
+<label class="check"><input class="training-day" type="checkbox" value="Dienstag"> Dienstag</label>
+<label class="check"><input class="training-day" type="checkbox" value="Mittwoch"> Mittwoch</label>
+<label class="check"><input class="training-day" type="checkbox" value="Donnerstag"> Donnerstag</label>
+<label class="check"><input class="training-day" type="checkbox" value="Freitag"> Freitag</label>
+<label class="check"><input class="training-day" type="checkbox" value="Samstag"> Samstag</label>
+<label class="check"><input class="training-day" type="checkbox" value="Sonntag"> Sonntag</label>
+<label class="check"><input id="noTrainingDays" type="checkbox"> Keine Angabe</label>
+</div>
+
+<h3 style="margin-top:25px">🧰 Verfügbares Equipment</h3>
+<div class="checkbox-grid" style="margin-top:10px">
+<label class="check"><input class="equipment" type="checkbox" value="Hanteln"> Hanteln</label>
+<label class="check"><input class="equipment" type="checkbox" value="Klimmzugstange"> Klimmzugstange</label>
+<label class="check"><input class="equipment" type="checkbox" value="Langhantel"> Langhantel</label>
+<label class="check"><input class="equipment" type="checkbox" value="Bank"> Trainingsbank</label>
+<label class="check"><input class="equipment" type="checkbox" value="Widerstandsband"> Widerstandsband</label>
+<label class="check"><input class="equipment" type="checkbox" value="Kettlebell"> Kettlebell</label>
+</div>
+
+<div class="actions">
+<button id="profileSaveButton" class="btn btn-primary" onclick="saveProfile()">Profil speichern & Trainingsplan erstellen</button>
+<button id="editProfileButton" class="btn btn-secondary" style="display:none" onclick="enableProfileEditing()">Bearbeiten</button>
+</div>
+</div>
+</section>
+
+<section id="ai" class="section">
+<div class="card">
+<div class="ai-header"><div class="ai-icon">🤖</div><div><h2>KI-Zielanalyse</h2><p class="muted">Beschreibe dein persönliches Ziel. Die Analyse sucht passende Übungen aus deiner verfügbaren Ausrüstung.</p></div></div>
+<div class="info-box muted">Beispiel: „Ich möchte 10 Klimmzüge schaffen und meinen Rücken stärker machen.“</div>
+<div class="field" style="margin-top:20px"><label>Was möchtest du erreichen?</label><textarea id="personalGoal" placeholder="Beschreibe dein persönliches Ziel..."></textarea></div>
+<button class="btn btn-primary" style="margin-top:15px" onclick="analyzeGoal()">🤖 Ziel analysieren</button>
+<div id="aiResult" class="ai-result" style="display:none"></div>
+</div>
+</section>
+
+<section id="generator" class="section">
+<div class="card"><h2>🏋️ Dein Trainingsplan</h2><p id="planDescription" class="muted">Erstelle zuerst dein Profil.</p></div>
+<div id="workoutContainer"></div>
+</section>
+
+<section id="progress" class="section">
+<div class="grid">
+<div class="card"><div class="muted">Trainingstage</div><div class="stat" id="totalWorkouts">0</div></div>
+<div class="card"><div class="muted">Erledigte Übungen</div><div class="stat" id="totalExercises">0</div></div>
+<div class="card"><div class="muted">Zielgewicht</div><div class="stat" id="progressTargetWeight" style="font-size:23px">–</div></div>
+</div>
+<div class="card"><h2>📊 Trainingshistorie</h2><br><div class="table-container"><table><thead><tr><th>Datum</th><th>Übungen</th></tr></thead><tbody id="historyTable"></tbody></table></div></div>
+</section>
+
+<section id="goals" class="section">
+<div class="card">
+<h2>🎯 Deine Ziele</h2>
+<p class="muted" style="margin:8px 0 25px">Hier kannst du dein Zielgewicht und dein gewünschtes Trainingspensum festlegen.</p>
+<div class="form-grid">
+<div class="field"><label>Zielgewicht (kg)</label><p class="muted" style="font-size:13px;line-height:1.5">Gib hier das Körpergewicht an, das du langfristig erreichen möchtest. Es dient als Orientierung für deine persönliche Entwicklung. Das Zielgewicht ist kein Muss und kann jederzeit geändert werden.</p><input id="targetWeight" type="number" step="0.1" min="1" placeholder="z. B. 75"></div>
+<div class="field"><label>Ziel: Trainings pro Woche</label><p class="muted" style="font-size:13px;line-height:1.5">Gib hier an, wie viele Trainings du pro Woche machen möchtest.</p><input id="targetWorkouts" type="number" min="1" max="14" value="3"></div>
+</div>
+<button class="btn btn-primary" style="margin-top:18px" onclick="saveGoals()">Ziele speichern</button>
+</div>
+</section>
+
+</main>
+</div>
+</div>
+
+<script>
+/* =========================================================
+   AUTH + DATENSPEICHERUNG
+   ROBUSTER LOGIN / REGISTRIERUNG
+========================================================= */
+
+let currentUser = localStorage.getItem("fitplan_current_user") || null;
+let profile = {};
+let workouts = [];
+let history = [];
+let goals = {};
+let aiData = {goal:"",exercises:[]};
+
+function normalizeEmail(email){
+    return String(email || "").trim().toLowerCase();
+}
+
+function getStoredUsers(){
+    try{
+        const raw=localStorage.getItem("fitplan_users");
+        if(!raw) return [];
+        const parsed=JSON.parse(raw);
+        if(!Array.isArray(parsed)) return [];
+        return parsed.filter(u => u && typeof u === "object");
+    }catch(error){
+        console.error("fitplan_users ist beschädigt:",error);
+        return [];
+    }
+}
+
+function saveStoredUsers(users){
+    try{
+        localStorage.setItem("fitplan_users",JSON.stringify(users));
+        return localStorage.getItem("fitplan_users") !== null;
+    }catch(error){
+        console.error("LocalStorage kann nicht schreiben:",error);
+        return false;
+    }
+}
+
+function storageAvailable(){
+    try{
+        const key="fitplan_storage_test";
+        localStorage.setItem(key,"ok");
+        const result=localStorage.getItem(key)==="ok";
+        localStorage.removeItem(key);
+        return result;
+    }catch(error){
+        return false;
+    }
+}
+
+function loadJSON(key,fallback){
+    try{
+        const raw=localStorage.getItem(key);
+        if(raw===null) return fallback;
+        const value=JSON.parse(raw);
+        return value ?? fallback;
+    }catch(error){
+        console.error("Fehler beim Lesen:",key,error);
+        return fallback;
+    }
+}
+
+function saveUserData(){
+    if(!currentUser) return false;
+    try{
+        const key=normalizeEmail(currentUser);
+        localStorage.setItem("fitplan_profile_"+key,JSON.stringify(profile||{}));
+        localStorage.setItem("fitplan_workouts_"+key,JSON.stringify(workouts||[]));
+        localStorage.setItem("fitplan_history_"+key,JSON.stringify(history||[]));
+        localStorage.setItem("fitplan_goals_"+key,JSON.stringify(goals||{}));
+        localStorage.setItem("fitplan_ai_"+key,JSON.stringify(aiData||{goal:"",exercises:[]}));
+        return true;
+    }catch(error){
+        console.error("Benutzerdaten konnten nicht gespeichert werden:",error);
+        return false;
+    }
+}
+
+function loadUserData(){
+    if(!currentUser) return;
+    const key=normalizeEmail(currentUser);
+
+    profile=loadJSON("fitplan_profile_"+key,{});
+    workouts=loadJSON("fitplan_workouts_"+key,[]);
+    history=loadJSON("fitplan_history_"+key,[]);
+    goals=loadJSON("fitplan_goals_"+key,{});
+    aiData=loadJSON("fitplan_ai_"+key,{goal:"",exercises:[]});
+
+    if(!Array.isArray(workouts)) workouts=[];
+    if(!Array.isArray(history)) history=[];
+    if(!aiData || typeof aiData!=="object") aiData={goal:"",exercises:[]};
+}
+
+function setAuthError(id,message){
+    const el=document.getElementById(id);
+    if(!el) return;
+    el.textContent=message;
+    el.style.display=message?"block":"none";
+}
+
+function showAuthForm(type){
+    const loginForm=document.getElementById("loginForm");
+    const registerForm=document.getElementById("registerForm");
+    const loginTab=document.getElementById("loginTab");
+    const registerTab=document.getElementById("registerTab");
+
+    const login=type==="login";
+    loginForm.style.display=login?"flex":"none";
+    registerForm.style.display=login?"none":"flex";
+    loginTab.classList.toggle("active",login);
+    registerTab.classList.toggle("active",!login);
+
+    setAuthError("loginError","");
+    setAuthError("registerError","");
+}
+
+function register(event){
+    event.preventDefault();
+
+    if(!storageAvailable()){
+        setAuthError("registerError","Dein Browser blockiert den lokalen Speicher. Öffne die Datei möglichst über einen normalen Browser/Server und nicht im privaten Modus.");
+        return;
+    }
+
+    const name=document.getElementById("registerName").value.trim();
+    const email=normalizeEmail(document.getElementById("registerEmail").value);
+    const password=document.getElementById("registerPassword").value;
+
+    setAuthError("registerError","");
+
+    if(!name){
+        setAuthError("registerError","Bitte gib deinen Namen ein.");
+        return;
+    }
+
+    if(!email || !email.includes("@")){
+        setAuthError("registerError","Bitte gib eine gültige E-Mail-Adresse ein.");
+        return;
+    }
+
+    if(password.length<6){
+        setAuthError("registerError","Das Passwort muss mindestens 6 Zeichen lang sein.");
+        return;
+    }
+
+    const users=getStoredUsers();
+
+    if(users.some(user=>normalizeEmail(user.email)===email)){
+        setAuthError("registerError","Diese E-Mail-Adresse ist bereits registriert. Melde dich stattdessen an.");
+        return;
+    }
+
+    const newUser={
+        id:"user_"+Date.now()+"_"+Math.random().toString(36).slice(2),
+        name:name,
+        email:email,
+        password:password,
+        createdAt:new Date().toISOString()
+    };
+
+    users.push(newUser);
+
+    if(!saveStoredUsers(users)){
+        setAuthError("registerError","Das Konto konnte nicht gespeichert werden. Der Browser erlaubt LocalStorage offenbar nicht.");
+        return;
+    }
+
+    // Sofort prüfen, ob die Registrierung wirklich gespeichert wurde.
+    const verification=getStoredUsers().find(user=>normalizeEmail(user.email)===email);
+
+    if(!verification){
+        setAuthError("registerError","Das Konto wurde nicht dauerhaft gespeichert. Bitte öffne die Website über einen lokalen Webserver.");
+        return;
+    }
+
+    currentUser=email;
+    localStorage.setItem("fitplan_current_user",email);
+
+    profile={name:name};
+    workouts=[];
+    history=[];
+    goals={};
+    aiData={goal:"",exercises:[]};
+
+    saveUserData();
+    openApp();
+}
+
+function login(event){
+    event.preventDefault();
+
+    if(!storageAvailable()){
+        setAuthError("loginError","Der Browser blockiert den lokalen Speicher. Deshalb können gespeicherte Konten nicht gelesen werden.");
+        return;
+    }
+
+    const email=normalizeEmail(document.getElementById("loginEmail").value);
+    const password=document.getElementById("loginPassword").value;
+
+    setAuthError("loginError","");
+
+    if(!email || !password){
+        setAuthError("loginError","Bitte E-Mail und Passwort eingeben.");
+        return;
+    }
+
+    const users=getStoredUsers();
+
+    const user=users.find(item=>{
+        return normalizeEmail(item.email)===email &&
+               String(item.password ?? "")===password;
+    });
+
+    if(!user){
+        // Extra Diagnose: E-Mail existiert, aber Passwort stimmt nicht.
+        const emailExists=users.some(item=>normalizeEmail(item.email)===email);
+
+        if(emailExists){
+            setAuthError("loginError","Die E-Mail wurde gefunden, aber das Passwort stimmt nicht.");
+        }else{
+            setAuthError("loginError","Kein Konto mit dieser E-Mail-Adresse gefunden. Hast du dich mit genau dieser E-Mail registriert?");
+        }
+        return;
+    }
+
+    currentUser=email;
+    localStorage.setItem("fitplan_current_user",email);
+
+    // Sitzung direkt verifizieren.
+    if(normalizeEmail(localStorage.getItem("fitplan_current_user"))!==email){
+        setAuthError("loginError","Die Anmeldung konnte nicht gespeichert werden. Der Browser blockiert LocalStorage.");
+        currentUser=null;
+        return;
+    }
+
+    loadUserData();
+    openApp();
+}
+
+function logout(){
+    // NUR die Sitzung löschen. Account und Profil bleiben erhalten.
+    localStorage.removeItem("fitplan_current_user");
+
+    currentUser=null;
+    profile={};
+    workouts=[];
+    history=[];
+    goals={};
+    aiData={goal:"",exercises:[]};
+
+    document.getElementById("app").style.display="none";
+    document.getElementById("authScreen").style.display="flex";
+
+    document.getElementById("loginEmail").value="";
+    document.getElementById("loginPassword").value="";
+    setAuthError("loginError","");
+
+    showAuthForm("login");
+}
+
+function openApp(){
+    document.getElementById("authScreen").style.display="none";
+    document.getElementById("app").style.display="block";
+
+    loadUserData();
+    loadProfile();
+    loadGoals();
+    loadAI();
+    updateDashboard();
+    renderWorkout();
+    renderHistory();
+    updateThemeButton();
+}
+
+function showStorageDiagnostic(){
+    const users=getStoredUsers();
+    const session=localStorage.getItem("fitplan_current_user");
+
+    alert(
+        "FitPlan Speicher-Test\\n\\n"+
+        "LocalStorage: "+(storageAvailable()?"OK":"BLOCKIERT")+"\\n"+
+        "Gespeicherte Konten: "+users.length+"\\n"+
+        "Aktive Sitzung: "+(session||"keine")+"\\n\\n"+
+        "Wenn hier 0 Konten steht, speichert der Browser die Registrierung nicht."
+    );
+}
+
+/* =========================================================
+   ÜBUNGSDATENBANK
+========================================================= */
+
+const exerciseDatabase={
+push:[
+{name:"Kurzhantel-Bankdrücken",sets:3,reps:"8-12",muscle:"Brust",equipment:["Hanteln"],keywords:["brust","drücken","push","oberkörper"]},
+{name:"Kurzhantel-Schulterdrücken",sets:3,reps:"8-12",muscle:"Schultern",equipment:["Hanteln"],keywords:["schulter","schultern","push"]},
+{name:"Liegestütze",sets:3,reps:"10-20",muscle:"Brust",equipment:[],keywords:["brust","liegestütze","push"]},
+{name:"Kurzhantel-Seitheben",sets:3,reps:"12-15",muscle:"Schultern",equipment:["Hanteln"],keywords:["schulter","seitliche schulter"]},
+{name:"Kurzhantel-Trizepsdrücken",sets:3,reps:"10-15",muscle:"Trizeps",equipment:["Hanteln"],keywords:["trizeps","arme"]}
+],
+pull:[
+{name:"Klimmzüge",sets:3,reps:"so viele wie sauber möglich",muscle:"Rücken & Bizeps",equipment:["Klimmzugstange"],keywords:["klimmzug","klimmzüge","rücken","bizeps","pull"]},
+{name:"Chin-Ups",sets:3,reps:"so viele wie sauber möglich",muscle:"Bizeps & Rücken",equipment:["Klimmzugstange"],keywords:["chin up","bizeps","rücken"]},
+{name:"Kurzhantel-Rudern",sets:3,reps:"8-12",muscle:"Rücken",equipment:["Hanteln"],keywords:["rudern","rücken","pull"]},
+{name:"Kurzhantel-Bizepscurls",sets:3,reps:"10-15",muscle:"Bizeps",equipment:["Hanteln"],keywords:["bizeps","arme","curl"]},
+{name:"Kurzhantel-Reverse-Flys",sets:3,reps:"12-15",muscle:"Hintere Schulter",equipment:["Hanteln"],keywords:["rücken","hintere schulter"]}
+],
+legs:[
+{name:"Kniebeugen",sets:3,reps:"10-15",muscle:"Beine",equipment:[],keywords:["beine","kniebeugen","quad"]},
+{name:"Goblet Squats",sets:3,reps:"10-15",muscle:"Beine",equipment:["Hanteln"],keywords:["beine","kniebeugen"]},
+{name:"Kurzhantel-Ausfallschritte",sets:3,reps:"8-12 je Seite",muscle:"Beine & Gesäß",equipment:["Hanteln"],keywords:["beine","ausfallschritte","gesäß"]},
+{name:"Rumänisches Kreuzheben mit Kurzhanteln",sets:3,reps:"8-12",muscle:"Beinrückseite & Gesäß",equipment:["Hanteln"],keywords:["beine","gesäß","beinrückseite"]},
+{name:"Wadenheben",sets:3,reps:"15-20",muscle:"Waden",equipment:[],keywords:["waden","beine"]}
+],
+full:[
+{name:"Liegestütze",sets:3,reps:"10-20",muscle:"Brust",equipment:[],keywords:["brust","push","ganzkörper"]},
+{name:"Klimmzüge",sets:3,reps:"so viele wie sauber möglich",muscle:"Rücken & Bizeps",equipment:["Klimmzugstange"],keywords:["rücken","bizeps","klimmzüge","ganzkörper"]},
+{name:"Goblet Squats",sets:3,reps:"10-15",muscle:"Beine",equipment:["Hanteln"],keywords:["beine","ganzkörper"]},
+{name:"Kurzhantel-Schulterdrücken",sets:3,reps:"8-12",muscle:"Schultern",equipment:["Hanteln"],keywords:["schulter","ganzkörper"]},
+{name:"Plank",sets:3,reps:"30-60 Sek.",muscle:"Core",equipment:[],keywords:["bauch","core","rumpf","ganzkörper"]}
+],
+cardio:[
+{name:"Laufen",sets:1,reps:"20-30 Min.",muscle:"Ausdauer",equipment:[],keywords:["laufen","ausdauer","kondition"]},
+{name:"Mountain Climbers",sets:3,reps:"30-45 Sek.",muscle:"Core & Ausdauer",equipment:[],keywords:["ausdauer","kondition","bauch"]},
+{name:"Plank",sets:3,reps:"30-60 Sek.",muscle:"Core",equipment:[],keywords:["bauch","core"]}
+]
+};
+
+function allExercises(){
+    return [...exerciseDatabase.push,...exerciseDatabase.pull,...exerciseDatabase.legs,...exerciseDatabase.full,...exerciseDatabase.cardio];
+}
+
+/* =========================================================
+   NAVIGATION
+========================================================= */
+
+function showSection(id,button){
+    document.querySelectorAll(".section").forEach(section=>section.classList.remove("active"));
+    const section=document.getElementById(id);
+    if(section)section.classList.add("active");
+    document.querySelectorAll(".nav button").forEach(btn=>btn.classList.remove("active"));
+    if(button)button.classList.add("active");
+
+    const titles={
+        dashboard:["Dashboard","Dein persönlicher Fitnessbereich"],
+        profile:["Mein Profil","Deine persönlichen Trainingsdaten"],
+        ai:["KI-Zielanalyse","Dein persönliches Ziel"],
+        generator:["Trainingsplan","Dein Trainingsplan"],
+        progress:["Fortschritt","Verfolge deine Entwicklung"],
+        goals:["Ziele","Deine persönlichen Fitnessziele"]
+    };
+    if(titles[id]){
+        document.getElementById("pageTitle").textContent=titles[id][0];
+        document.getElementById("pageSubtitle").textContent=titles[id][1];
+    }
+    document.getElementById("sidebar").classList.remove("open");
+    if(id==="generator")renderWorkout();
+}
+
+function showSectionByName(id){
+    let found=null;
+    document.querySelectorAll(".nav button").forEach(button=>{
+        if((button.getAttribute("onclick")||"").includes("'"+id+"'"))found=button;
+    });
+    showSection(id,found);
+}
+function toggleMenu(){document.getElementById("sidebar").classList.toggle("open")}
+
+/* =========================================================
+   PROFIL
+========================================================= */
+
+function getFormProfile(){
+    const trainingDays=[...document.querySelectorAll(".training-day:checked")].map(item=>item.value);
+    const equipment=[...document.querySelectorAll(".equipment:checked")].map(item=>item.value);
+
+    return{
+        name:document.getElementById("name").value.trim(),
+        age:document.getElementById("age").value,
+        gender:document.getElementById("gender").value,
+        height:document.getElementById("height").value,
+        weight:document.getElementById("weight").value,
+        level:document.getElementById("level").value,
+        goal:document.getElementById("goal").value,
+        days:Number(document.getElementById("days").value),
+        duration:Number(document.getElementById("duration").value),
+        location:document.getElementById("location").value,
+        trainingDays,
+        noTrainingDays:document.getElementById("noTrainingDays").checked,
+        equipment,
+        fitness:document.getElementById("fitness").value,
+        limitations:document.getElementById("limitations").value
+    };
+}
+
+function saveProfile(){
+    const newProfile=getFormProfile();
+
+    if(!newProfile.name){alert("Bitte gib deinen Namen ein.");return;}
+
+    if(!newProfile.noTrainingDays && newProfile.trainingDays.length!==newProfile.days){
+        alert("Bitte wähle genau "+newProfile.days+" Trainingstage aus oder wähle „Keine Angabe“.");
+        return;
+    }
+
+    profile=newProfile;
+    generatePlan();
+    saveUserData();
+    lockProfile();
+    updateDashboard();
+    alert("Profil gespeichert und Trainingsplan erstellt.");
+}
+
+function loadProfile(){
+    if(!profile)return;
+
+    document.getElementById("name").value=profile.name||"";
+    document.getElementById("age").value=profile.age||"";
+    document.getElementById("gender").value=profile.gender||"";
+    document.getElementById("height").value=profile.height||"";
+    document.getElementById("weight").value=profile.weight||"";
+    document.getElementById("level").value=profile.level||"Anfänger";
+    document.getElementById("goal").value=profile.goal||"Muskelaufbau";
+    document.getElementById("days").value=profile.days||3;
+    document.getElementById("duration").value=profile.duration||60;
+    document.getElementById("location").value=profile.location||"Zuhause";
+    document.getElementById("fitness").value=profile.fitness||"";
+    document.getElementById("limitations").value=profile.limitations||"";
+
+    document.querySelectorAll(".equipment").forEach(checkbox=>{
+        checkbox.checked=(profile.equipment||[]).includes(checkbox.value);
+    });
+    document.querySelectorAll(".training-day").forEach(checkbox=>{
+        checkbox.checked=(profile.trainingDays||[]).includes(checkbox.value);
+    });
+    document.getElementById("noTrainingDays").checked=profile.noTrainingDays||false;
+    updateTrainingDayState();
+
+    if(profile.name)lockProfile();
+    else enableProfileEditing();
+}
+
+function lockProfile(){
+    document.querySelectorAll("#profile input,#profile select,#profile textarea").forEach(element=>element.disabled=true);
+    document.getElementById("profileSaveButton").style.display="none";
+    document.getElementById("editProfileButton").style.display="inline-block";
+    document.getElementById("profileSavedInfo").style.display="block";
+}
+
+function enableProfileEditing(){
+    document.querySelectorAll("#profile input,#profile select,#profile textarea").forEach(element=>element.disabled=false);
+    document.getElementById("profileSaveButton").style.display="inline-block";
+    document.getElementById("editProfileButton").style.display="none";
+    document.getElementById("profileSavedInfo").style.display="none";
+    updateTrainingDayState();
+}
+
+function updateTrainingDayState(){
+    const noDays=document.getElementById("noTrainingDays");
+    document.querySelectorAll(".training-day").forEach(checkbox=>{
+        checkbox.disabled=noDays.checked;
+        if(noDays.checked)checkbox.checked=false;
+    });
+}
+
+document.getElementById("noTrainingDays").addEventListener("change",updateTrainingDayState);
+document.querySelectorAll(".training-day").forEach(checkbox=>{
+    checkbox.addEventListener("change",function(){
+        if(this.checked)document.getElementById("noTrainingDays").checked=false;
+        updateTrainingDayState();
+    });
+});
+
+/* =========================================================
+   EQUIPMENT + TRAININGSPLAN
+========================================================= */
+
+function canUseExercise(exercise){
+    const equipment=profile.equipment||[];
+    if(!exercise.equipment||exercise.equipment.length===0)return true;
+    return exercise.equipment.every(item=>equipment.includes(item));
+}
+
+function violatesLimitations(exercise){
+    const limitations=String(profile.limitations||"").toLowerCase();
+    if(!limitations)return false;
+    return limitations.includes(exercise.name.toLowerCase());
+}
+
+function generatePlan(){
+    const days=profile.days||3;
+    const selectedDays=profile.noTrainingDays?[]:(profile.trainingDays||[]);
+    let types;
+
+    if(days===2)types=[["Ganzkörper A","full"],["Ganzkörper B","full"]];
+    else if(days===3)types=[["Ganzkörper","full"],["Oberkörper","push"],["Unterkörper","legs"]];
+    else if(days===4)types=[["Oberkörper","push"],["Unterkörper","legs"],["Rücken & Bizeps","pull"],["Beine & Core","legs"]];
+    else types=[["Push","push"],["Pull","pull"],["Beine","legs"],["Ganzkörper","full"],["Ausdauer & Core","cardio"],["Ganzkörper","full"]].slice(0,days);
+
+    workouts=types.map((type,index)=>{
+        const exercises=exerciseDatabase[type[1]].filter(canUseExercise).filter(exercise=>!violatesLimitations(exercise)).slice(0,5);
+        return{
+            day:index+1,
+            weekday:selectedDays[index]||null,
+            name:type[0],
+            exercises:exercises.map((exercise,exerciseIndex)=>({
+                id:index+"-"+exerciseIndex,
+                name:exercise.name,sets:exercise.sets,reps:exercise.reps,muscle:exercise.muscle,
+                equipment:exercise.equipment,completed:false
+            }))
+        };
+    });
+    saveUserData();
+    renderWorkout();
+}
+
+function todayName(){
+    return ["Sonntag","Montag","Dienstag","Mittwoch","Donnerstag","Freitag","Samstag"][new Date().getDay()];
+}
+
+function visibleWorkouts(){
+    if(profile.noTrainingDays)return workouts;
+    if(!profile.trainingDays||profile.trainingDays.length===0)return workouts;
+    return workouts.filter(workout=>workout.weekday===todayName());
+}
+
+function renderWorkout(){
+    const container=document.getElementById("workoutContainer");
+    if(!container)return;
+    container.innerHTML="";
+
+    if(!workouts||workouts.length===0){
+        container.innerHTML='<div class="card"><h3>Noch kein Trainingsplan</h3><p class="muted" style="margin-top:8px">Speichere zuerst dein Profil.</p></div>';
+        return;
+    }
+
+    const visible=visibleWorkouts();
+
+    document.getElementById("planDescription").textContent=profile.noTrainingDays
+        ?"Keine festen Wochentage ausgewählt. Hier ist dein Trainingsplan."
+        :"Heute ist "+todayName()+". Es wird nur das Training für heute angezeigt.";
+
+    if(visible.length===0){
+        container.innerHTML='<div class="card"><h2>Heute ist kein Training geplant 🎉</h2><p class="muted" style="margin-top:10px">Dein Trainingsplan enthält heute keinen Trainingstag.</p></div>';
+        return;
+    }
+
+    visible.forEach(day=>{
+        const wrapper=document.createElement("div");
+        wrapper.className="workout-day";
+        const originalIndex=workouts.findIndex(item=>item.day===day.day);
+
+        wrapper.innerHTML='<div class="workout-header"><div><div class="workout-title">'+escapeHTML(day.weekday?day.weekday+" · "+day.name:day.name)+'</div></div><span class="tag">'+day.exercises.length+' Übungen</span></div>';
+
+        day.exercises.forEach((exercise,exerciseIndex)=>{
+            const row=document.createElement("div");
+            row.className="exercise "+(exercise.completed?"done":"");
+            const equipment=exercise.equipment&&exercise.equipment.length?exercise.equipment.join(", "):"Kein Equipment";
+
+            row.innerHTML=
+                '<div><strong>'+escapeHTML(exercise.name)+'</strong><small>'+escapeHTML(exercise.muscle)+'</small>'+
+                (exercise.aiGenerated?'<br><span class="tag">🤖 Zielübung</span>':'')+
+                '</div>'+
+                '<div><strong>'+escapeHTML(exercise.sets)+'</strong><small>Sätze</small></div>'+
+                '<div><strong>'+escapeHTML(exercise.reps)+'</strong><small>Wiederholungen</small></div>'+
+                '<div><small>🧰 '+escapeHTML(equipment)+'</small></div>'+
+                '<div><button class="complete" onclick="completeExercise('+originalIndex+','+exerciseIndex+')">'+(exercise.completed?"✓ Erledigt":"Erledigen")+'</button></div>';
+
+            wrapper.appendChild(row);
+        });
+        container.appendChild(wrapper);
+    });
+}
+
+function completeExercise(dayIndex,exerciseIndex){
+    if(!workouts[dayIndex]||!workouts[dayIndex].exercises[exerciseIndex])return;
+    const exercise=workouts[dayIndex].exercises[exerciseIndex];
+
+    if(exercise.completed){
+        exercise.completed=false;
+        history=history.filter(item=>!(item.exercise===exercise.name&&item.workoutDay===workouts[dayIndex].day&&item.userKey===currentUser&&item.timestampId===exercise.id));
+    }else{
+        exercise.completed=true;
+        history.push({
+            date:new Date().toLocaleDateString("de-DE"),
+            exercise:exercise.name,
+            workoutDay:workouts[dayIndex].day,
+            userKey:currentUser,
+            timestampId:exercise.id
+        });
+    }
+    saveUserData();
+    renderWorkout();
+    renderHistory();
+    updateDashboard();
+}
+
+/* =========================================================
+   KI-ZIELANALYSE
+========================================================= */
+
+function analyzeGoal(){
+    const text=document.getElementById("personalGoal").value.trim();
+    if(!text){alert("Bitte beschreibe zuerst dein Ziel.");return;}
+
+    const normalized=text.toLowerCase();
+    const matches=[];
+
+    allExercises().forEach(exercise=>{
+        let score=0;
+        (exercise.keywords||[]).forEach(keyword=>{
+            if(normalized.includes(keyword))score+=2;
+        });
+        if(normalized.includes(exercise.name.toLowerCase()))score+=5;
+        if(score>0&&canUseExercise(exercise)&&!violatesLimitations(exercise))matches.push({exercise,score});
+    });
+
+    matches.sort((a,b)=>b.score-a.score);
+
+    let selected=matches.slice(0,6).map(item=>item.exercise);
+    if(selected.length===0){
+        selected=allExercises().filter(exercise=>canUseExercise(exercise)&&!violatesLimitations(exercise)).slice(0,3);
+    }
+
+    aiData={goal:text,exercises:selected.map(exercise=>exercise.name)};
+    saveUserData();
+    renderAIResult();
+}
+
+function renderAIResult(){
+    const result=document.getElementById("aiResult");
+    result.style.display="block";
+
+    const names=(aiData.exercises||[]).map(name=>{
+        const exercise=allExercises().find(item=>item.name===name);
+        return '<div class="ai-exercise"><strong>'+escapeHTML(name)+'</strong><small>'+escapeHTML(exercise?exercise.muscle:"")+'</small></div>';
+    }).join("");
+
+    result.innerHTML=
+        '<div class="success-box">🤖 <b>Ziel analysiert</b><br><br>Deine Beschreibung:<br><b>'+escapeHTML(aiData.goal)+'</b></div>'+
+        '<div class="ai-goal"><b>Empfohlene Schwerpunkte</b><p class="muted" style="margin-top:8px">Die folgenden Übungen werden aufgrund deines Ziels in deinen Trainingsplan aufgenommen.</p></div>'+
+        '<div class="ai-exercises">'+names+'</div>'+
+        '<button class="btn btn-primary" style="margin-top:15px" onclick="addAIExercisesToPlan()">🏋️ Übungen in Trainingsplan übernehmen</button>';
+}
+
+function addAIExercisesToPlan(){
+    if(!aiData.exercises||aiData.exercises.length===0){alert("Analysiere zuerst dein Ziel.");return;}
+    if(!workouts.length)generatePlan();
+
+    aiData.exercises.forEach(exerciseName=>{
+        const exercise=allExercises().find(item=>item.name===exerciseName);
+        if(!exercise||!canUseExercise(exercise)||violatesLimitations(exercise))return;
+
+        const targetDay=workouts.find(day=>!day.exercises.some(item=>item.name===exercise.name))||workouts[0];
+        if(!targetDay)return;
+
+        if(targetDay.exercises.some(item=>item.name===exercise.name))return;
+
+        targetDay.exercises.push({
+            id:"ai-"+Date.now()+"-"+Math.random(),
+            name:exercise.name,sets:exercise.sets,reps:exercise.reps,muscle:exercise.muscle,
+            equipment:exercise.equipment,completed:false,aiGenerated:true
+        });
+    });
+
+    saveUserData();
+    renderWorkout();
+    updateDashboard();
+    alert("Die Übungen aus deiner Zielanalyse wurden in den Trainingsplan übernommen.");
+    showSectionByName("generator");
+}
+
+/* =========================================================
+   DASHBOARD + HISTORIE + ZIELE
+========================================================= */
+
+function updateDashboard(){
+    document.getElementById("userName").textContent=profile.name||currentUser||"Benutzer";
+    document.getElementById("dashboardGoal").textContent=profile.goal||"Noch nicht festgelegt";
+
+    const welcome=document.getElementById("welcomeCard");
+    welcome.style.display=profile.name?"none":"block";
+
+    const exercises=workouts.flatMap(workout=>workout.exercises||[]);
+    const completed=exercises.filter(exercise=>exercise.completed).length;
+    const percentage=exercises.length?Math.round(completed/exercises.length*100):0;
+
+    document.getElementById("completedExercises").textContent=completed;
+    document.getElementById("weekWorkouts").textContent=workouts.filter(workout=>(workout.exercises||[]).some(exercise=>exercise.completed)).length;
+    document.getElementById("weekProgress").style.width=percentage+"%";
+    document.getElementById("progressText").textContent=percentage+"%";
+    document.getElementById("progressTargetWeight").textContent=goals.targetWeight?goals.targetWeight+" kg":"–";
+}
+
+function renderHistory(){
+    const tbody=document.getElementById("historyTable");
+    tbody.innerHTML="";
+    const grouped={};
+
+    history.forEach(item=>{
+        if(!grouped[item.date])grouped[item.date]=[];
+        grouped[item.date].push(item.exercise);
+    });
+
+    Object.entries(grouped).reverse().forEach(([date,exercises])=>{
+        const row=document.createElement("tr");
+        row.innerHTML="<td>"+escapeHTML(date)+"</td><td>"+exercises.map(escapeHTML).join(", ")+"</td>";
+        tbody.appendChild(row);
+    });
+
+    document.getElementById("totalExercises").textContent=history.length;
+    document.getElementById("totalWorkouts").textContent=Object.keys(grouped).length;
+}
+
+function saveGoals(){
+    goals={
+        targetWeight:document.getElementById("targetWeight").value,
+        targetWorkouts:document.getElementById("targetWorkouts").value
+    };
+    saveUserData();
+    updateDashboard();
+    alert("Ziele gespeichert.");
+}
+
+function loadGoals(){
+    document.getElementById("targetWeight").value=goals.targetWeight||"";
+    document.getElementById("targetWorkouts").value=goals.targetWorkouts||3;
+}
+
+function loadAI(){
+    document.getElementById("personalGoal").value=aiData.goal||"";
+    if(aiData.goal&&aiData.exercises&&aiData.exercises.length)renderAIResult();
+}
+
+/* =========================================================
+   THEME
+========================================================= */
+
+function toggleTheme(){
+    document.body.classList.toggle("light-mode");
+    const light=document.body.classList.contains("light-mode");
+    localStorage.setItem("fitplan_theme",light?"light":"dark");
+    updateThemeButton();
+}
+
+function updateThemeButton(){
+    const button=document.getElementById("themeButton");
+    if(!button)return;
+    button.textContent=document.body.classList.contains("light-mode")?"🌙 Dunkelmodus":"☀️ Hellmodus";
+}
+
+function loadTheme(){
+    if(localStorage.getItem("fitplan_theme")==="light")document.body.classList.add("light-mode");
+    updateThemeButton();
+}
+
+function escapeHTML(text){
+    const div=document.createElement("div");
+    div.textContent=String(text??"");
+    return div.innerHTML;
+}
+
+/* =========================================================
+   START
+========================================================= */
+
+loadTheme();
+
+if(currentUser){
+    const users=getStoredUsers();
+    const validUser=users.find(user=>normalizeEmail(user.email)===normalizeEmail(currentUser));
+
+    if(validUser){
+        currentUser=normalizeEmail(validUser.email);
+        localStorage.setItem("fitplan_current_user",currentUser);
+        loadUserData();
+        openApp();
+    }else{
+        localStorage.removeItem("fitplan_current_user");
+        currentUser=null;
+        document.getElementById("authScreen").style.display="flex";
+        document.getElementById("app").style.display="none";
+    }
+}
+</script>
+<script>if("serviceWorker" in navigator){window.addEventListener("load",()=>navigator.serviceWorker.register("./sw.js").catch(console.warn));}</script>
+</body>
+</html>
